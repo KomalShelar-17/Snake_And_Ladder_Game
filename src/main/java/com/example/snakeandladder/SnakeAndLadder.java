@@ -1,12 +1,15 @@
 package com.example.snakeandladder;
 
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -16,6 +19,10 @@ public class SnakeAndLadder extends Application {
     public static final int tileSize=60,width=10,height=10;
 
     public static final int buttonLine=height*tileSize+50, infoLine=buttonLine-30;
+
+    private static Dice dice = new Dice();
+    private Player playerOne, playerTwo;
+    private boolean gameStarted=false, playerOneTurn=true, playerTwoTurn=false;
 
     private Pane createContent(){
 
@@ -45,27 +52,136 @@ public class SnakeAndLadder extends Application {
 
         playerOneButton.setTranslateX(50);
         playerOneButton.setTranslateY(buttonLine);
+        playerOneButton.setDisable(true);
         playerTwoButton.setTranslateX(450);
         playerTwoButton.setTranslateY(buttonLine);
+        playerTwoButton.setDisable(true);
         startButton.setTranslateX(280);
         startButton.setTranslateY(buttonLine);
 
         //Label
 
-        Label playerOneLabel = new Label("My turn");
-        Label playerTwoLabel = new Label("Your turn");
-        Label startLabel = new Label("Dice");
+        Label playerOneLabel = new Label("");
+        Label playerTwoLabel = new Label("");
+        Label diceLabel = new Label("Dice");
 
-        playerOneLabel.setTranslateX(60);
+        playerOneLabel.setTranslateX(50);
         playerOneLabel.setTranslateY(infoLine);
-        playerTwoLabel.setTranslateX(460);
+        playerTwoLabel.setTranslateX(450);
         playerTwoLabel.setTranslateY(infoLine);
-        startLabel.setTranslateX(290);
-        startLabel.setTranslateY(infoLine);
+        diceLabel.setTranslateX(290);
+        diceLabel.setTranslateY(infoLine);
+
+        playerOne = new Player(tileSize, Color.BLACK,"Komal");
+        playerTwo = new Player(tileSize-5,Color.WHITE,"Shilpa");
+
+        // player moving logic
+
+        playerOneButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                if(gameStarted){
+                    if(playerOneTurn){
+                        int diceValue = dice.getRolledDiceValue();
+                        diceLabel.setText("Dice Value" + diceValue);
+                        playerOne.movePlayer(diceValue);
+
+                        // winning condition
+
+                        if(playerOne.isWinner()){
+                            diceLabel.setText("Winner is " + playerOne.getName());
+
+                            playerOneTurn = false;
+                            playerOneButton.setDisable(true);
+                            playerOneLabel.setText("");
+
+                            playerTwoTurn = true;
+                            playerTwoButton.setDisable(true);
+                            playerTwoLabel.setText("");
+
+                            startButton.setDisable(false);
+                            startButton.setText("Restart");
+                            gameStarted = false;
+
+                        }
+                        else{
+                            playerOneTurn = false;
+                            playerOneButton.setDisable(true);
+                            playerOneLabel.setText("");
+
+                            playerTwoTurn = true;
+                            playerTwoButton.setDisable(false);
+                            playerTwoLabel.setText("Your Turn " + playerTwo.getName());
+                        }
+
+                    }
+                }
+            }
+        });
+
+        playerTwoButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                if(gameStarted){
+                    if(playerTwoTurn){
+                        int diceValue = dice.getRolledDiceValue();
+                        diceLabel.setText("Dice Value" + diceValue);
+                        playerTwo.movePlayer(diceValue);
+
+                        // winning condition
+                        if(playerTwo.isWinner()){
+                            diceLabel.setText("Winner is " + playerTwo.getName());
+                            playerOneTurn = false;
+                            playerOneButton.setDisable(true);
+                            playerOneLabel.setText("");
+
+                            playerTwoTurn =  true;
+                            playerTwoButton.setDisable(true);
+                            playerTwoLabel.setText("");
+
+                            startButton.setDisable(false);
+                            startButton.setText("Restart");
+
+                        }
+                        else{
+                            playerOneTurn = true;
+                            playerOneButton.setDisable(false);
+                            playerOneLabel.setText("Your Turn " + playerOne.getName());
+
+                            playerTwoTurn = false;
+                            playerTwoButton.setDisable(true);
+                            playerTwoLabel.setText("");
+
+                        }
+
+                    }
+                }
+            }
+        });
+
+        startButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                gameStarted=true;
+                diceLabel.setText("Game Started");
+                startButton.setDisable(true);
+                playerOneTurn = true;
+                playerOneLabel.setText("Your Turn " + playerOne.getName());
+                playerOneButton.setDisable(false);
+                playerOne.startingPosition();
+
+                playerTwoTurn=false;
+                playerTwoLabel.setText("");
+                playerTwoButton.setDisable(true);
+                playerTwo.startingPosition();
+            }
+        });
+
 
         root.getChildren().addAll(board,
                 playerOneButton,playerTwoButton,startButton,
-                playerOneLabel,playerTwoLabel,startLabel);
+                playerOneLabel,playerTwoLabel,diceLabel,
+                playerOne.getCoin(), playerTwo.getCoin());
 
         return root;
     }
